@@ -1,18 +1,56 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
+    <toggleView />
+    <BaseMap :markers="markers" />
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
+import BaseMap from "@/components/BaseMap.vue";
 
 export default {
   name: "home",
   components: {
-    HelloWorld
+    BaseMap
+  },
+  data() {
+    return {
+      markers: null
+    };
+  },
+  created() {
+    fetch("/.netlify/functions/jam-me-up")
+      .then(res => res.json())
+      .then(data => {
+        this.markers = this.geojsonify(data.results);
+      });
+  },
+  methods: {
+    geojsonify(response) {
+      let features = [];
+      response.map(item => {
+        features.push({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [item.coordinates.longitude, item.coordinates.latitude]
+          },
+          properties: {
+            ...item
+          }
+        });
+      });
+      return {
+        type: "FeatureCollection",
+        features
+      };
+    }
   }
 };
 </script>
+
+<style lang="scss">
+.home {
+  height: 500px;
+}
+</style>
